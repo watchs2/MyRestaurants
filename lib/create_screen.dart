@@ -1,5 +1,3 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_native_type_patch.dart';
-
 import 'package:MyRestaurants/data/database_handler.dart';
 import 'package:MyRestaurants/services/location_service.dart';
 import 'package:flutter/material.dart';

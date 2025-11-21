@@ -1,5 +1,6 @@
 import 'package:MyRestaurants/create_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:MyRestaurants/data/database_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,6 +32,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _db = DatabaseHandler();
+  void loadRestaurants() async {
+    List<Map<String, dynamic>> restaurantes = await _db.getRestaurants();
+    print(restaurantes);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +47,13 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: .center,
-          children: [const Text('HomePage Screen')],
+          children: [
+            FloatingActionButton(
+              onPressed: loadRestaurants,
+              tooltip: 'LoadRestaurants',
+              child: const Icon(Icons.list),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(

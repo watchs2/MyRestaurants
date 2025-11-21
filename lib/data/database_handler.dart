@@ -1,5 +1,3 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_native_type_patch.dart';
-
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -71,5 +69,60 @@ class DatabaseHandler {
     };
 
     return await db.insert('restaurant', restaurant);
+  }
+
+  Future<List<Map<String, dynamic>>> getRestaurants() async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> result = await db.query('restaurant');
+
+    return result;
+  }
+
+  Future<Map<String, dynamic>?> getRestaurantById(int id) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> results = await db.query(
+      'restaurant',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (results.isNotEmpty) {
+      return results.first;
+    }
+    //se não encontrar vai null
+    return null;
+  }
+
+  Future<int> deleteRestaurant(String id) async {
+    final db = await database;
+    //acho que isto elimina a tabela toda
+    return await db.delete('restaurant', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> updateRestaurant(
+    String id,
+    String name,
+    String address,
+    String phone,
+    double? latitude,
+    double? longitude,
+    String? img_url,
+  ) async {
+    final db = await database;
+
+    var restaurant = {
+      'id': id,
+      'name': name,
+      'address': address,
+      'phone': phone,
+      'latitude': latitude,
+      'longitude': longitude,
+      'img_url': img_url,
+      'stars': 0,
+    };
+
+    return await db.update('restaurant', restaurant);
   }
 }
