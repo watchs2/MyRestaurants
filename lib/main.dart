@@ -1,4 +1,4 @@
-import 'package:example/create_screen.dart';
+import 'package:MyRestaurants/create_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
