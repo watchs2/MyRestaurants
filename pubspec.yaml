@@ -37,7 +37,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.3
   path_provider: ^2.1.1
-  location: ^4.4.0
+  location: ^8.0.1
 
   
 

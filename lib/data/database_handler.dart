@@ -1,3 +1,5 @@
+import 'dart:nativewrappers/_internal/vm/lib/ffi_native_type_patch.dart';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -34,7 +36,7 @@ class DatabaseHandler {
 
   Future<void> createTables(Database db) async {
     const String createRestaurantTable = '''
-      CREATE TABLE cantinas(
+      CREATE TABLE restaurant(
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         address TEXT NOT NULL,
@@ -46,5 +48,28 @@ class DatabaseHandler {
       )
     ''';
     await db.execute(createRestaurantTable);
+  }
+
+  Future<int> createRestaurant(
+    String name,
+    String address,
+    String phone,
+    double? latitude,
+    double? longitude,
+    String? img_url,
+  ) async {
+    final db = await database;
+
+    var restaurant = {
+      'name': name,
+      'address': address,
+      'phone': phone,
+      'latitude': latitude,
+      'longitude': longitude,
+      'img_url': img_url,
+      'stars': 0,
+    };
+
+    return await db.insert('restaurant', restaurant);
   }
 }

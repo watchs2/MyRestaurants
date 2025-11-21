@@ -1,3 +1,7 @@
+import 'dart:nativewrappers/_internal/vm/lib/ffi_native_type_patch.dart';
+
+import 'package:MyRestaurants/data/database_handler.dart';
+import 'package:MyRestaurants/services/location_service.dart';
 import 'package:flutter/material.dart';
 
 class CreatePage extends StatefulWidget {
@@ -17,12 +21,23 @@ class _CreatePage extends State<CreatePage> {
 
   String _currentLocation = "";
 
-  void _useCurrentLocation() {
-    //chamar o serviço
-    setState(() {
-      _currentLocation = "";
-    });
+  final _locationService = LocationService();
+  final _db = DatabaseHandler();
 
+  double? _latitude;
+  double? _longitude;
+
+  Future<void> _loadLocation() async {
+    //TODO fazer W e N e colocar a bolinha
+    final locationData = await _locationService.getCurrentLocation();
+    if (locationData != null) {
+      _latitude = locationData.latitude;
+      _longitude = locationData.longitude;
+      setState(() {
+        _currentLocation =
+            "${locationData.latitude}, ${locationData.longitude}";
+      });
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Localização atualizada com sucesso!')),
     );
@@ -33,7 +48,9 @@ class _CreatePage extends State<CreatePage> {
       final name = _nameController.text;
       final adress = _adressController.text;
       final phone = _phoneController.text;
+      //TODO não pode ser null  _latitude, _longitude
 
+      _db.createRestaurant(name, adress, phone, _latitude, _longitude, null);
       //chamar aqui o database handler
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Localização atualizada com sucesso!')),
@@ -169,7 +186,7 @@ class _CreatePage extends State<CreatePage> {
                     const SizedBox(height: 15),
                     // Botão para usar a localização.
                     ElevatedButton.icon(
-                      onPressed: _useCurrentLocation,
+                      onPressed: _loadLocation,
                       icon: const Icon(Icons.my_location),
                       label: const Text('Usar a minha localização'),
                       style: ElevatedButton.styleFrom(
