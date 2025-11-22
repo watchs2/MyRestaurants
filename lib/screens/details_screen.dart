@@ -1,7 +1,8 @@
-import 'package:MyRestaurants/main.dart';
+import 'package:MyRestaurants/screens/edit_screen.dart';
 import 'package:MyRestaurants/model/restaurante.dart';
 import 'package:flutter/material.dart';
 import 'package:MyRestaurants/data/database_handler.dart';
+import 'package:MyRestaurants/screens/home_screen.dart';
 
 class DetailsPage extends StatefulWidget {
   final Restaurant restaurant;
@@ -30,7 +31,6 @@ class _DetailsPageState extends State<DetailsPage> {
     });
 
     final db = DatabaseHandler();
-    // TODO aqui devia ter await
     await db.updateRestaurantRating(widget.restaurant.id!, newRating);
 
     _isLoading = false;
@@ -162,7 +162,7 @@ class _DetailsPageState extends State<DetailsPage> {
                     _buildInfoRow(
                       icon: Icons.phone,
                       label: 'Telefone',
-                      value: restaurant.phone ?? 'Não Fornecido',
+                      value: restaurant.phone,
                     ),
                     _buildInfoRow(
                       icon: Icons.gps_fixed,
@@ -188,7 +188,10 @@ class _DetailsPageState extends State<DetailsPage> {
                       children: [
                         ElevatedButton.icon(
                           onPressed: () {
-                            // TODO: Implementar lógica de Edição
+                            Navigator.of(context).pushNamed(
+                              EditPage.routeName,
+                              arguments: restaurant,
+                            );
                           },
                           icon: const Icon(Icons.edit),
                           label: const Text('Editar'),

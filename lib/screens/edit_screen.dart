@@ -1,16 +1,18 @@
 import 'package:MyRestaurants/data/database_handler.dart';
 import 'package:MyRestaurants/services/location_service.dart';
 import 'package:flutter/material.dart';
+import 'package:MyRestaurants/model/restaurante.dart';
 
-class CreatePage extends StatefulWidget {
-  const CreatePage({super.key});
-  static const String routeName = '/create';
+class EditPage extends StatefulWidget {
+  final Restaurant restaurant;
+  static const String routeName = '/edit';
+  const EditPage({super.key, required this.restaurant});
 
   @override
-  State<CreatePage> createState() => _CreatePage();
+  State<EditPage> createState() => _EditPage();
 }
 
-class _CreatePage extends State<CreatePage> {
+class _EditPage extends State<EditPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
@@ -18,15 +20,28 @@ class _CreatePage extends State<CreatePage> {
   final _phoneController = TextEditingController();
 
   String _currentLocation = "";
+  double? _latitude;
+  double? _longitude;
 
   final _locationService = LocationService();
   final _db = DatabaseHandler();
 
-  double? _latitude;
-  double? _longitude;
+  @override
+  void initState() {
+    super.initState();
+
+    final restaurant = widget.restaurant;
+
+    _nameController.text = restaurant.name;
+    _adressController.text = restaurant.address;
+    _phoneController.text = restaurant.phone;
+
+    _latitude = restaurant.latitude;
+    _longitude = restaurant.longitude;
+    _currentLocation = "${restaurant.latitude}, ${restaurant.longitude}";
+  }
 
   Future<void> _loadLocation() async {
-    //TODO fazer W e N e colocar a bolinha
     final locationData = await _locationService.getCurrentLocation();
     if (locationData != null) {
       _latitude = locationData.latitude;
@@ -41,26 +56,43 @@ class _CreatePage extends State<CreatePage> {
     );
   }
 
-  void _createRestaurant() {
+  void _editRestaurant() async {
     if (_formKey.currentState!.validate()) {
-      final name = _nameController.text;
-      final adress = _adressController.text;
-      final phone = _phoneController.text;
-      //TODO não pode ser null  _latitude, _longitude
+      if (_latitude == null || _longitude == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, defina a localização GPS.')),
+        );
+        return;
+      }
 
-      _db.createRestaurant(name, adress, phone, _latitude, _longitude, null);
-      //chamar aqui o database handler
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Localização atualizada com sucesso!')),
+      final restaurantId = widget.restaurant.id;
+      final updatedName = _nameController.text;
+      final updatedAddress = _adressController.text;
+      final updatedPhone = _phoneController.text;
+
+      final result = await _db.updateRestaurant(
+        restaurantId!,
+        updatedName,
+        updatedAddress,
+        updatedPhone,
+        _latitude!,
+        _longitude!,
+        widget.restaurant.imgUrl,
+        widget.restaurant.stars,
       );
 
-      _nameController.clear();
-      _adressController.clear();
-      _phoneController.clear();
-
-      setState(() {
-        _currentLocation = "";
-      });
+      if (result > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Restaurante atualizado com sucesso!')),
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao atualizar o restaurante. Tente novamente.'),
+          ),
+        );
+      }
     }
   }
 
@@ -76,7 +108,7 @@ class _CreatePage extends State<CreatePage> {
   Widget build(buildContext) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar Novo Restaurante'),
+        title: const Text('Editar Restaurante'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         centerTitle: true,
       ),
@@ -91,7 +123,6 @@ class _CreatePage extends State<CreatePage> {
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nome do Restaurante',
-                  hintText: 'Pizzaria do Norte',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
@@ -108,7 +139,6 @@ class _CreatePage extends State<CreatePage> {
                 controller: _adressController,
                 decoration: const InputDecoration(
                   labelText: 'Morada do Restaurante',
-                  hintText: 'Rua da Liberdade, 42 Lisboa',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
@@ -125,19 +155,18 @@ class _CreatePage extends State<CreatePage> {
                 controller: _phoneController,
                 decoration: const InputDecoration(
                   labelText: 'Telémovel do Restaurante',
-                  hintText: '913961923',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor insira o telemóvel.';
+                  // Permite que o campo fique vazio, mas se tiver valor, valida
+                  if (value != null && value.isNotEmpty) {
+                    if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                      return 'Por favor insira um numero válido';
+                    }
                   }
-                  if (RegExp(r'^[0-9]+$').hasMatch(value)) {
-                    return null;
-                  }
-                  return 'Por favor insira um numero válido';
+                  return null;
                 },
               ),
               const SizedBox(height: 30),
@@ -182,7 +211,6 @@ class _CreatePage extends State<CreatePage> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    // Botão para usar a localização.
                     ElevatedButton.icon(
                       onPressed: _loadLocation,
                       icon: const Icon(Icons.my_location),
@@ -201,9 +229,9 @@ class _CreatePage extends State<CreatePage> {
               ),
               const SizedBox(height: 40),
               ElevatedButton.icon(
-                onPressed: _createRestaurant,
-                icon: const Icon(Icons.my_location),
-                label: const Text('Criar Restaurante'),
+                onPressed: _editRestaurant,
+                icon: const Icon(Icons.save),
+                label: const Text('Guardar Alterações'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   textStyle: const TextStyle(
@@ -213,7 +241,7 @@ class _CreatePage extends State<CreatePage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  backgroundColor: Colors.green.shade700,
+                  backgroundColor: Colors.blue.shade700,
                   foregroundColor: Colors.white,
                   elevation: 5,
                 ),

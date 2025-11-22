@@ -101,13 +101,14 @@ class DatabaseHandler {
   }
 
   Future<int> updateRestaurant(
-    String id,
+    int id,
     String name,
     String address,
     String phone,
     double? latitude,
     double? longitude,
     String? img_url,
+    int? stars,
   ) async {
     final db = await database;
 
@@ -119,7 +120,7 @@ class DatabaseHandler {
       'latitude': latitude,
       'longitude': longitude,
       'img_url': img_url,
-      'stars': null,
+      'stars': stars,
     };
 
     return await db.update('restaurant', restaurant);
