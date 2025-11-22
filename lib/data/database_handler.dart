@@ -95,9 +95,8 @@ class DatabaseHandler {
     return null;
   }
 
-  Future<int> deleteRestaurant(String id) async {
+  Future<int> deleteRestaurant(int id) async {
     final db = await database;
-    //acho que isto elimina a tabela toda
     return await db.delete('restaurant', where: 'id = ?', whereArgs: [id]);
   }
 
@@ -120,9 +119,22 @@ class DatabaseHandler {
       'latitude': latitude,
       'longitude': longitude,
       'img_url': img_url,
-      'stars': 0,
+      'stars': null,
     };
 
     return await db.update('restaurant', restaurant);
+  }
+
+  Future<int> updateRestaurantRating(int id, int rating) async {
+    final db = await database;
+
+    var updatedRaiting = {'stars': rating};
+
+    return await db.update(
+      'restaurant',
+      where: 'id = ?',
+      whereArgs: [id],
+      updatedRaiting,
+    );
   }
 }
