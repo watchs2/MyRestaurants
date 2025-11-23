@@ -12,21 +12,18 @@ class CreatePage extends StatefulWidget {
 
 class _CreatePage extends State<CreatePage> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameController = TextEditingController();
   final _adressController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  String _currentLocation = "";
+  String _currentLocation = "Localização não definida";
+  double? _latitude;
+  double? _longitude;
 
   final _locationService = LocationService();
   final _db = DatabaseHandler();
 
-  double? _latitude;
-  double? _longitude;
-
   Future<void> _loadLocation() async {
-    //TODO fazer W e N e colocar a bolinha
     final locationData = await _locationService.getCurrentLocation();
     if (locationData != null) {
       _latitude = locationData.latitude;
@@ -35,10 +32,12 @@ class _CreatePage extends State<CreatePage> {
         _currentLocation =
             "${locationData.latitude}, ${locationData.longitude}";
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Localização obtida com sucesso!')),
+        );
+      }
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Localização atualizada com sucesso!')),
-    );
   }
 
   void _createRestaurant() {
@@ -46,12 +45,11 @@ class _CreatePage extends State<CreatePage> {
       final name = _nameController.text;
       final adress = _adressController.text;
       final phone = _phoneController.text;
-      //TODO não pode ser null  _latitude, _longitude
 
       _db.createRestaurant(name, adress, phone, _latitude, _longitude, null);
-      //chamar aqui o database handler
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Localização atualizada com sucesso!')),
+        const SnackBar(content: Text('Restaurante criado com sucesso!')),
       );
 
       _nameController.clear();
@@ -59,8 +57,12 @@ class _CreatePage extends State<CreatePage> {
       _phoneController.clear();
 
       setState(() {
-        _currentLocation = "";
+        _currentLocation = "Localização não definida";
+        _latitude = null;
+        _longitude = null;
       });
+
+      Navigator.of(context).pop();
     }
   }
 
@@ -73,13 +75,9 @@ class _CreatePage extends State<CreatePage> {
   }
 
   @override
-  Widget build(buildContext) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Adicionar Novo Restaurante'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Novo Restaurante')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Form(
@@ -87,111 +85,90 @@ class _CreatePage extends State<CreatePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nome do Restaurante',
-                  hintText: 'Pizzaria do Norte',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
+                  hintText: 'Ex: Pizzaria do Norte',
+                  prefixIcon: Icon(Icons.store),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor insira um nome válido';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Insira um nome' : null,
               ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _adressController,
                 decoration: const InputDecoration(
-                  labelText: 'Morada do Restaurante',
-                  hintText: 'Rua da Liberdade, 42 Lisboa',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
+                  labelText: 'Morada',
+                  hintText: 'Ex: Rua da Liberdade, 42',
+                  prefixIcon: Icon(Icons.map),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor insira uma morada válida';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Insira uma morada' : null,
               ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Telémovel do Restaurante',
-                  hintText: '913961923',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
+                  labelText: 'Telemóvel',
+                  hintText: 'Ex: 912345678',
+                  prefixIcon: Icon(Icons.phone),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor insira o telemóvel.';
-                  }
-                  if (RegExp(r'^[0-9]+$').hasMatch(value)) {
-                    return null;
-                  }
-                  return 'Por favor insira um numero válido';
+                  if (value == null || value.isEmpty)
+                    return 'Insira o telemóvel';
+                  if (!RegExp(r'^[0-9]+$').hasMatch(value))
+                    return 'Apenas números';
+                  return null;
                 },
               ),
               const SizedBox(height: 30),
+
+              // Card de Localização simplificado
               Container(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300, width: 1),
-                  borderRadius: BorderRadius.circular(10.0),
-                  color: Colors.blueGrey.shade50,
+                  color: const Color(
+                    0xFFFF5500,
+                  ).withOpacity(0.05), // Laranja muito suave
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFF5500).withOpacity(0.2),
+                  ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Localização GPS',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 12.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.blueGrey.shade200),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        _currentLocation,
-                        style: TextStyle(
-                          fontStyle:
-                              _currentLocation == 'Localização não definida'
-                              ? FontStyle.italic
-                              : FontStyle.normal,
-                          color: Colors.grey.shade700,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.my_location, color: Color(0xFFFF5500)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Coordenadas GPS',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 15),
-                    ElevatedButton.icon(
-                      onPressed: _loadLocation,
-                      icon: const Icon(Icons.my_location),
-                      label: const Text('Usar a minha localização'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.indigo,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    Text(
+                      _currentLocation,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _loadLocation,
+                        icon: const Icon(Icons.gps_fixed),
+                        label: const Text('Obter Minha Localização'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF5500),
+                          side: const BorderSide(color: Color(0xFFFF5500)),
                         ),
                       ),
                     ),
@@ -201,21 +178,8 @@ class _CreatePage extends State<CreatePage> {
               const SizedBox(height: 40),
               ElevatedButton.icon(
                 onPressed: _createRestaurant,
-                icon: const Icon(Icons.my_location),
+                icon: const Icon(Icons.check),
                 label: const Text('Criar Restaurante'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  backgroundColor: Colors.green.shade700,
-                  foregroundColor: Colors.white,
-                  elevation: 5,
-                ),
               ),
             ],
           ),

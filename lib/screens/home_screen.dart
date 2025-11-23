@@ -39,17 +39,31 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meus Restaurantes'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Meus Restaurantes')),
       body: _isloading
           ? const Center(child: CircularProgressIndicator())
           : _restaurants.isEmpty
-          ? const Center(child: Text('Nenhum restaurante adicionado ainda.'))
-          : ListView.builder(
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.restaurant_menu,
+                    size: 64,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhum restaurante adicionado ainda.',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
               itemCount: _restaurants.length,
+              separatorBuilder: (ctx, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final restaurant = _restaurants[index];
                 return RestaurantCard(restaurant: restaurant);
@@ -61,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
             _fetchRestaurants();
           });
         },
-        tooltip: 'Create Restaurant',
+        tooltip: 'Adicionar Restaurante',
         child: const Icon(Icons.add),
       ),
     );
@@ -74,53 +88,73 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      elevation: 4,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(10),
-        title: Text(
-          restaurant.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.deepPurple,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    restaurant.address,
-                    style: const TextStyle(fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.phone, size: 16, color: Colors.grey),
-                const SizedBox(width: 5),
-                Text(restaurant.phone, style: const TextStyle(fontSize: 14)),
-              ],
-            ),
-          ],
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+      elevation: 2,
+      shadowColor: Colors.grey.withOpacity(0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Navigator.of(
             context,
           ).pushNamed(DetailsPage.routeName, arguments: restaurant);
-          //tlvz tenha de colocar um then
         },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.restaurant, color: theme.primaryColor),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      restaurant.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 14,
+                          color: theme.primaryColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            restaurant.address,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.visibility, size: 16, color: Colors.grey.shade400),
+            ],
+          ),
+        ),
       ),
     );
   }

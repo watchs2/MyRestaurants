@@ -14,7 +14,6 @@ class EditPage extends StatefulWidget {
 
 class _EditPage extends State<EditPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameController = TextEditingController();
   final _adressController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -29,13 +28,10 @@ class _EditPage extends State<EditPage> {
   @override
   void initState() {
     super.initState();
-
     final restaurant = widget.restaurant;
-
     _nameController.text = restaurant.name;
     _adressController.text = restaurant.address;
     _phoneController.text = restaurant.phone;
-
     _latitude = restaurant.latitude;
     _longitude = restaurant.longitude;
     _currentLocation = "${restaurant.latitude}, ${restaurant.longitude}";
@@ -50,10 +46,12 @@ class _EditPage extends State<EditPage> {
         _currentLocation =
             "${locationData.latitude}, ${locationData.longitude}";
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Localização atualizada!')),
+        );
+      }
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Localização atualizada com sucesso!')),
-    );
   }
 
   void _editRestaurant() async {
@@ -65,33 +63,22 @@ class _EditPage extends State<EditPage> {
         return;
       }
 
-      final restaurantId = widget.restaurant.id;
-      final updatedName = _nameController.text;
-      final updatedAddress = _adressController.text;
-      final updatedPhone = _phoneController.text;
-
       final result = await _db.updateRestaurant(
-        restaurantId!,
-        updatedName,
-        updatedAddress,
-        updatedPhone,
+        widget.restaurant.id!,
+        _nameController.text,
+        _adressController.text,
+        _phoneController.text,
         _latitude!,
         _longitude!,
         widget.restaurant.imgUrl,
         widget.restaurant.stars,
       );
 
-      if (result > 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restaurante atualizado com sucesso!')),
-        );
+      if (result > 0 && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Guardado com sucesso!')));
         Navigator.of(context).pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro ao atualizar o restaurante. Tente novamente.'),
-          ),
-        );
       }
     }
   }
@@ -105,13 +92,9 @@ class _EditPage extends State<EditPage> {
   }
 
   @override
-  Widget build(buildContext) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Editar Restaurante'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Editar Restaurante')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Form(
@@ -119,108 +102,81 @@ class _EditPage extends State<EditPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Nome do Restaurante',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
+                  labelText: 'Nome',
+                  prefixIcon: Icon(Icons.store),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor insira um nome válido';
-                  }
-                  return null;
-                },
+                validator: (v) => v!.isEmpty ? 'Inválido' : null,
               ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _adressController,
                 decoration: const InputDecoration(
-                  labelText: 'Morada do Restaurante',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
+                  labelText: 'Morada',
+                  prefixIcon: Icon(Icons.map),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor insira uma morada válida';
-                  }
-                  return null;
-                },
+                validator: (v) => v!.isEmpty ? 'Inválido' : null,
               ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Telémovel do Restaurante',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
+                  labelText: 'Telemóvel',
+                  prefixIcon: Icon(Icons.phone),
                 ),
                 validator: (value) {
-                  // Permite que o campo fique vazio, mas se tiver valor, valida
                   if (value != null && value.isNotEmpty) {
-                    if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                      return 'Por favor insira um numero válido';
-                    }
+                    if (!RegExp(r'^[0-9]+$').hasMatch(value))
+                      return 'Apenas números';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 30),
               Container(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300, width: 1),
-                  borderRadius: BorderRadius.circular(10.0),
-                  color: Colors.blueGrey.shade50,
+                  color: const Color(0xFFFF5500).withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFF5500).withOpacity(0.2),
+                  ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Localização GPS',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 12.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.blueGrey.shade200),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        _currentLocation,
-                        style: TextStyle(
-                          fontStyle:
-                              _currentLocation == 'Localização não definida'
-                              ? FontStyle.italic
-                              : FontStyle.normal,
-                          color: Colors.grey.shade700,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.my_location, color: Color(0xFFFF5500)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Localização',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 15),
-                    ElevatedButton.icon(
-                      onPressed: _loadLocation,
-                      icon: const Icon(Icons.my_location),
-                      label: const Text('Usar a minha localização'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.indigo,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    Text(
+                      _currentLocation,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _loadLocation,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Atualizar Localização'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF5500),
+                          side: const BorderSide(color: Color(0xFFFF5500)),
                         ),
                       ),
                     ),
@@ -232,19 +188,6 @@ class _EditPage extends State<EditPage> {
                 onPressed: _editRestaurant,
                 icon: const Icon(Icons.save),
                 label: const Text('Guardar Alterações'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  backgroundColor: Colors.blue.shade700,
-                  foregroundColor: Colors.white,
-                  elevation: 5,
-                ),
               ),
             ],
           ),

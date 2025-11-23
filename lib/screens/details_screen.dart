@@ -25,97 +25,65 @@ class _DetailsPageState extends State<DetailsPage> {
   }
 
   void _updateRating(int newRating) async {
-    _isLoading = true;
-    setState(() {
-      _currentRating = newRating;
-    });
+    setState(() => _isLoading = true);
 
     final db = DatabaseHandler();
     await db.updateRestaurantRating(widget.restaurant.id!, newRating);
 
-    _isLoading = false;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Avaliação atualizada para $_currentRating estrelas!'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    setState(() {
+      _currentRating = newRating;
+      _isLoading = false;
+    });
   }
 
   void _deleteRestaurant() async {
-    _isLoading = true;
-    setState(() {});
+    setState(() => _isLoading = true);
+
     final db = DatabaseHandler();
     await db.deleteRestaurant(widget.restaurant.id!);
 
-    _isLoading = false;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Restaurante ${widget.restaurant.name} eliminado!'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      MyHomePage.routeName,
-      (Route<dynamic> route) => false,
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.restaurant.name} eliminado!')),
+      );
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        MyHomePage.routeName,
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 
-  Widget _buildStarRating() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(5, (index) {
-        final starValue = index + 1;
-
-        final isFilled = starValue <= _currentRating;
-
-        return IconButton(
-          icon: Icon(
-            isFilled ? Icons.star : Icons.star_border,
-            color: isFilled ? Colors.amber : Colors.grey,
-            size: 40,
-          ),
-          onPressed: () {
-            _updateRating(starValue);
-          },
-        );
-      }),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoTile(IconData icon, String title, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-          const SizedBox(width: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black54,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF5500).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: const Color(0xFFFF5500), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
-              ),
-              const SizedBox(height: 2),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.7,
-                child: Text(
+                Text(
                   value,
-                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -128,89 +96,89 @@ class _DetailsPageState extends State<DetailsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sobre o Restaurante'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
+        title: const Text('Detalhes'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamed(EditPage.routeName, arguments: restaurant);
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: Text(
-                        restaurant.name,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.primary,
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    restaurant.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  _buildInfoTile(
+                    Icons.location_on,
+                    'MORADA',
+                    restaurant.address,
+                  ),
+                  const Divider(height: 1),
+                  _buildInfoTile(Icons.phone, 'TELEFONE', restaurant.phone),
+                  const Divider(height: 1),
+                  _buildInfoTile(
+                    Icons.gps_fixed,
+                    'GPS',
+                    '${restaurant.latitude}, ${restaurant.longitude}',
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  const Text(
+                    'Avaliação',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final starValue = index + 1;
+                      final isFilled = starValue <= _currentRating;
+                      return IconButton(
+                        iconSize: 40,
+                        icon: Icon(
+                          isFilled ? Icons.star : Icons.star_border,
+                          color: isFilled
+                              ? const Color(0xFFFF5500)
+                              : Colors.grey.shade300,
                         ),
+                        onPressed: () => _updateRating(starValue),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 50),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      onPressed: _deleteRestaurant,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Eliminar Restaurante'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                     ),
-
-                    const Divider(),
-                    _buildInfoRow(
-                      icon: Icons.location_on,
-                      label: 'Morada',
-                      value: restaurant.address,
-                    ),
-                    _buildInfoRow(
-                      icon: Icons.phone,
-                      label: 'Telefone',
-                      value: restaurant.phone,
-                    ),
-                    _buildInfoRow(
-                      icon: Icons.gps_fixed,
-                      label: 'Coordenadas GPS',
-                      value: '${restaurant.latitude}, ${restaurant.longitude}',
-                    ),
-
-                    const Divider(height: 40),
-                    const Text(
-                      'A sua Avaliação:',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildStarRating(),
-                    const SizedBox(height: 50),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).pushNamed(
-                              EditPage.routeName,
-                              arguments: restaurant,
-                            );
-                          },
-                          icon: const Icon(Icons.edit),
-                          label: const Text('Editar'),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            _deleteRestaurant();
-                          },
-                          icon: const Icon(Icons.delete),
-                          label: const Text('Eliminar'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
     );
