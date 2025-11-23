@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:MyRestaurants/data/database_handler.dart';
 import 'package:MyRestaurants/screens/home_screen.dart';
 import 'package:MyRestaurants/services/photo_service.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class DetailsPage extends StatefulWidget {
   final Restaurant restaurant;
@@ -19,6 +21,9 @@ class _DetailsPageState extends State<DetailsPage> {
   late int _currentRating;
   bool _isLoading = false;
 
+  // Cor principal da app (Laranja)
+  final Color _primaryColor = const Color(0xFFFF5500);
+
   @override
   void initState() {
     super.initState();
@@ -27,10 +32,8 @@ class _DetailsPageState extends State<DetailsPage> {
 
   void _updateRating(int newRating) async {
     setState(() => _isLoading = true);
-
     final db = DatabaseHandler();
     await db.updateRestaurantRating(widget.restaurant.id!, newRating);
-
     setState(() {
       _currentRating = newRating;
       _isLoading = false;
@@ -39,13 +42,15 @@ class _DetailsPageState extends State<DetailsPage> {
 
   void _deleteRestaurant() async {
     setState(() => _isLoading = true);
-
     final db = DatabaseHandler();
     await db.deleteRestaurant(widget.restaurant.id!);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.restaurant.name} eliminado!')),
+        SnackBar(
+          content: Text('${widget.restaurant.name} eliminado!'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       Navigator.of(context).pushNamedAndRemoveUntil(
         MyHomePage.routeName,
@@ -54,18 +59,19 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+  // Widget auxiliar para secções de informação
   Widget _buildInfoTile(IconData icon, String title, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFF5500).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              color: _primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFFFF5500), size: 24),
+            child: Icon(icon, color: _primaryColor, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -73,14 +79,21 @@ class _DetailsPageState extends State<DetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  title.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.1,
+                  ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
+                    color: Colors.black87,
                   ),
                 ),
               ],
@@ -91,103 +104,255 @@ class _DetailsPageState extends State<DetailsPage> {
     );
   }
 
+  Widget _buildMap(double lat, double lng) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 10),
+          child: Text(
+            'Localização',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Container(
+          height: 220,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: LatLng(lat, lng),
+                initialZoom: 15.0,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.2020157100.myrestaurants',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(lat, lng),
+                      width: 80,
+                      height: 80,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 45,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final restaurant = widget.restaurant;
+    final hasImage =
+        restaurant.imgUrl != null &&
+        PhotoService.getImage(restaurant.imgUrl) != null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamed(EditPage.routeName, arguments: restaurant);
-            },
-          ),
-        ],
-      ),
+      backgroundColor: Colors.grey.shade50, // Fundo ligeiramente cinza
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    restaurant.name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  _buildInfoTile(
-                    Icons.location_on,
-                    'MORADA',
-                    restaurant.address,
-                  ),
-                  const Divider(height: 1),
-                  _buildInfoTile(Icons.phone, 'TELEFONE', restaurant.phone),
-                  const Divider(height: 1),
-                  _buildInfoTile(
-                    Icons.gps_fixed,
-                    'GPS',
-                    '${restaurant.latitude}, ${restaurant.longitude}',
-                  ),
-                  if (restaurant.imgUrl != null &&
-                      PhotoService.getImage(restaurant.imgUrl) != null)
-                    Image.file(
-                      PhotoService.getImage(restaurant.imgUrl)!,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  const SizedBox(height: 40),
-
-                  const Text(
-                    'Avaliação',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      final starValue = index + 1;
-                      final isFilled = starValue <= _currentRating;
-                      return IconButton(
-                        iconSize: 40,
-                        icon: Icon(
-                          isFilled ? Icons.star : Icons.star_border,
-                          color: isFilled
-                              ? const Color(0xFFFF5500)
-                              : Colors.grey.shade300,
-                        ),
-                        onPressed: () => _updateRating(starValue),
-                      );
-                    }),
-                  ),
-
-                  const SizedBox(height: 50),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton.icon(
-                      onPressed: _deleteRestaurant,
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Eliminar Restaurante'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+          ? Center(child: CircularProgressIndicator(color: _primaryColor))
+          : CustomScrollView(
+              slivers: [
+                // 1. CABEÇALHO EXPANSÍVEL COM IMAGEM
+                SliverAppBar(
+                  expandedHeight: 250.0,
+                  pinned: true,
+                  backgroundColor: _primaryColor,
+                  actions: [
+                    Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.white),
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(
+                            EditPage.routeName,
+                            arguments: restaurant,
+                          );
+                        },
                       ),
                     ),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text(
+                      restaurant.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(color: Colors.black45, blurRadius: 10),
+                        ],
+                      ),
+                    ),
+                    centerTitle: true,
+                    background: hasImage
+                        ? Image.file(
+                            PhotoService.getImage(restaurant.imgUrl)!,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [_primaryColor, Colors.orange.shade300],
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.restaurant,
+                                size: 80,
+                                color: Colors.white24,
+                              ),
+                            ),
+                          ),
                   ),
-                ],
-              ),
+                ),
+
+                // 2. CONTEÚDO DO CORPO
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        // Secção de Avaliação (Estrelas)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade200,
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(5, (index) {
+                              final starValue = index + 1;
+                              final isFilled = starValue <= _currentRating;
+                              return IconButton(
+                                iconSize: 32,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: Icon(
+                                  isFilled ? Icons.star : Icons.star_border,
+                                  color: isFilled
+                                      ? _primaryColor
+                                      : Colors.grey.shade300,
+                                ),
+                                onPressed: () => _updateRating(starValue),
+                              );
+                            }),
+                          ),
+                        ),
+
+                        // Cartão de Informações
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                _buildInfoTile(
+                                  Icons.location_on_outlined,
+                                  'Morada',
+                                  restaurant.address,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: Divider(
+                                    height: 1,
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                _buildInfoTile(
+                                  Icons.phone_outlined,
+                                  'Telefone',
+                                  restaurant.phone,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: Divider(
+                                    height: 1,
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                _buildInfoTile(
+                                  Icons.gps_fixed,
+                                  'Coordenadas',
+                                  '${restaurant.latitude?.toStringAsFixed(4)}, ${restaurant.longitude?.toStringAsFixed(4)}',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+                        _buildMap(restaurant.latitude, restaurant.longitude),
+
+                        const SizedBox(height: 40),
+
+                        // Botão Eliminar
+                        TextButton.icon(
+                          onPressed: _deleteRestaurant,
+                          icon: const Icon(Icons.delete_outline, size: 20),
+                          label: const Text('Eliminar Restaurante'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red.shade400,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            backgroundColor: Colors.red.shade50,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
     );
   }
