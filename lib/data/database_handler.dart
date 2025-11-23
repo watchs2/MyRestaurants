@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:MyRestaurants/services/photo_service.dart';
 
 class DatabaseHandler {
   static final DatabaseHandler _instance = DatabaseHandler._internal();
@@ -54,9 +57,13 @@ class DatabaseHandler {
     String phone,
     double? latitude,
     double? longitude,
-    String? img_url,
+    File? img_url,
   ) async {
     final db = await database;
+    String? img_path;
+    if (img_url != null) {
+      img_path = await PhotoService.saveImage(img_url);
+    }
 
     var restaurant = {
       'name': name,
@@ -64,7 +71,7 @@ class DatabaseHandler {
       'phone': phone,
       'latitude': latitude,
       'longitude': longitude,
-      'img_url': img_url,
+      'img_url': img_path,
       'stars': 0,
     };
 

@@ -1,6 +1,9 @@
 import 'package:MyRestaurants/data/database_handler.dart';
 import 'package:MyRestaurants/services/location_service.dart';
+import 'package:MyRestaurants/services/photo_service.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class CreatePage extends StatefulWidget {
   const CreatePage({super.key});
@@ -16,12 +19,18 @@ class _CreatePage extends State<CreatePage> {
   final _adressController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  //localização
+  final _locationService = LocationService();
   String _currentLocation = "Localização não definida";
   double? _latitude;
   double? _longitude;
 
-  final _locationService = LocationService();
+  //bds
   final _db = DatabaseHandler();
+
+  //fotos
+  final _photoService = PhotoService();
+  File? _selectedImage;
 
   Future<void> _loadLocation() async {
     final locationData = await _locationService.getCurrentLocation();
@@ -40,13 +49,39 @@ class _CreatePage extends State<CreatePage> {
     }
   }
 
+  void _takePhoto() async {
+    final file = await _photoService.pickImage(ImageSource.camera);
+    if (file != null) {
+      setState(() {
+        _selectedImage = File(file.path);
+      });
+    }
+  }
+
+  //TODO se tiver tempo fazer unselect file
+  void _getPhotoGallery() async {
+    final file = await _photoService.pickImage(ImageSource.gallery);
+    if (file != null) {
+      setState(() {
+        _selectedImage = File(file.path);
+      });
+    }
+  }
+
   void _createRestaurant() {
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text;
       final adress = _adressController.text;
       final phone = _phoneController.text;
 
-      _db.createRestaurant(name, adress, phone, _latitude, _longitude, null);
+      _db.createRestaurant(
+        name,
+        adress,
+        phone,
+        _latitude,
+        _longitude,
+        _selectedImage,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Restaurante criado com sucesso!')),
@@ -126,7 +161,6 @@ class _CreatePage extends State<CreatePage> {
               ),
               const SizedBox(height: 30),
 
-              // Card de Localização simplificado
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -170,6 +204,85 @@ class _CreatePage extends State<CreatePage> {
                           foregroundColor: const Color(0xFFFF5500),
                           side: const BorderSide(color: Color(0xFFFF5500)),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(
+                    0xFFFF5500,
+                  ).withOpacity(0.05), // Laranja muito suave
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFF5500).withOpacity(0.2),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.camera_alt_rounded,
+                          color: Color(0xFFFF5500),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Foto (Opcional)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _selectedImage != null
+                        ? Image.file(_selectedImage!, height: 200)
+                        : Text("Nenhuma foto selecionada"),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _takePhoto,
+                              icon: const Icon(Icons.camera_alt),
+                              label: const Text('Câmara'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFFF5500),
+                                side: const BorderSide(
+                                  color: Color(0xFFFF5500),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _getPhotoGallery,
+                              icon: const Icon(Icons.photo_library),
+                              label: const Text('Galeria'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFFF5500),
+                                side: const BorderSide(
+                                  color: Color(0xFFFF5500),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

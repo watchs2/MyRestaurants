@@ -3,6 +3,7 @@ import 'package:MyRestaurants/model/restaurante.dart';
 import 'package:flutter/material.dart';
 import 'package:MyRestaurants/data/database_handler.dart';
 import 'package:MyRestaurants/screens/home_screen.dart';
+import 'package:MyRestaurants/services/photo_service.dart';
 
 class DetailsPage extends StatefulWidget {
   final Restaurant restaurant;
@@ -138,7 +139,14 @@ class _DetailsPageState extends State<DetailsPage> {
                     'GPS',
                     '${restaurant.latitude}, ${restaurant.longitude}',
                   ),
-
+                  if (restaurant.imgUrl != null &&
+                      PhotoService.getImage(restaurant.imgUrl) != null)
+                    Image.file(
+                      PhotoService.getImage(restaurant.imgUrl)!,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   const SizedBox(height: 40),
 
                   const Text(
