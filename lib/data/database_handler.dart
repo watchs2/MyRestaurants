@@ -45,7 +45,8 @@ class DatabaseHandler {
         latitude REAL NOT NULL,
         longitude REAL NOT NULL,
         img_url TEXT,
-        stars INTEGER
+        stars INTEGER,
+        updatedAt INTEGER
       )
     ''';
     await db.execute(createRestaurantTable);
@@ -64,7 +65,7 @@ class DatabaseHandler {
     if (img_url != null) {
       img_path = await PhotoService.saveImage(img_url);
     }
-
+    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
     var restaurant = {
       'name': name,
       'address': address,
@@ -73,6 +74,7 @@ class DatabaseHandler {
       'longitude': longitude,
       'img_url': img_path,
       'stars': 0,
+      'updatedAt': currentTimestamp,
     };
 
     return await db.insert('restaurant', restaurant);
@@ -118,7 +120,7 @@ class DatabaseHandler {
     int? stars,
   ) async {
     final db = await database;
-
+    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
     var restaurant = {
       'id': id,
       'name': name,
@@ -128,6 +130,7 @@ class DatabaseHandler {
       'longitude': longitude,
       'img_url': img_url,
       'stars': stars,
+      'updatedAt': currentTimestamp,
     };
 
     return await db.update('restaurant', restaurant);
@@ -136,8 +139,22 @@ class DatabaseHandler {
   Future<int> updateRestaurantRating(int id, int rating) async {
     final db = await database;
 
-    var updatedRaiting = {'stars': rating};
+    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
 
+    var updatedRaiting = {'stars': rating, 'updatedAt': currentTimestamp};
+    return await db.update(
+      'restaurant',
+      where: 'id = ?',
+      whereArgs: [id],
+      updatedRaiting,
+    );
+  }
+
+  Future<int> updateRestaurantAccessTime(int id) async {
+    final db = await database;
+    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
+
+    var updatedRaiting = {'updatedAt': currentTimestamp};
     return await db.update(
       'restaurant',
       where: 'id = ?',

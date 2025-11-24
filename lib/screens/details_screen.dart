@@ -20,14 +20,22 @@ class DetailsPage extends StatefulWidget {
 class _DetailsPageState extends State<DetailsPage> {
   late int _currentRating;
   bool _isLoading = false;
+  final _db = DatabaseHandler();
 
   // Cor principal da app (Laranja)
   final Color _primaryColor = const Color(0xFFFF5500);
 
   @override
   void initState() {
-    super.initState();
+    _isLoading = true;
     _currentRating = widget.restaurant.stars ?? 0;
+    _updateAccessTime;
+    super.initState();
+    _isLoading = false;
+  }
+
+  void _updateAccessTime() async {
+    await _db.updateRestaurantAccessTime(widget.restaurant.id!);
   }
 
   void _updateRating(int newRating) async {
@@ -241,40 +249,6 @@ class _DetailsPageState extends State<DetailsPage> {
                     child: Column(
                       children: [
                         // Secção de Avaliação (Estrelas)
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          margin: const EdgeInsets.only(bottom: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.shade200,
-                                blurRadius: 5,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(5, (index) {
-                              final starValue = index + 1;
-                              final isFilled = starValue <= _currentRating;
-                              return IconButton(
-                                iconSize: 32,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                icon: Icon(
-                                  isFilled ? Icons.star : Icons.star_border,
-                                  color: isFilled
-                                      ? _primaryColor
-                                      : Colors.grey.shade300,
-                                ),
-                                onPressed: () => _updateRating(starValue),
-                              );
-                            }),
-                          ),
-                        ),
 
                         // Cartão de Informações
                         Card(
@@ -318,14 +292,49 @@ class _DetailsPageState extends State<DetailsPage> {
                                 _buildInfoTile(
                                   Icons.gps_fixed,
                                   'Coordenadas',
-                                  '${restaurant.latitude?.toStringAsFixed(4)}, ${restaurant.longitude?.toStringAsFixed(4)}',
+                                  '${restaurant.latitude.toStringAsFixed(4)}, ${restaurant.longitude.toStringAsFixed(4)}',
                                 ),
                               ],
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade200,
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(5, (index) {
+                              final starValue = index + 1;
+                              final isFilled = starValue <= _currentRating;
+                              return IconButton(
+                                iconSize: 32,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: Icon(
+                                  isFilled ? Icons.star : Icons.star_border,
+                                  color: isFilled
+                                      ? _primaryColor
+                                      : Colors.grey.shade300,
+                                ),
+                                onPressed: () => _updateRating(starValue),
+                              );
+                            }),
+                          ),
+                        ),
 
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 20),
                         _buildMap(restaurant.latitude, restaurant.longitude),
 
                         const SizedBox(height: 40),

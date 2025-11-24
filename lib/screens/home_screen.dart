@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:MyRestaurants/model/restaurante.dart';
 import 'package:MyRestaurants/screens/create_screen.dart';
 import 'package:MyRestaurants/screens/details_screen.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:MyRestaurants/services/location_service.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -16,30 +18,113 @@ class _MyHomePageState extends State<MyHomePage> {
   final _db = DatabaseHandler();
 
   List<Restaurant> _restaurants = [];
-  bool _isloading = true;
+  bool _isloading = false;
+  LatLng? _currentPosition;
+
+  //Nome,distancia e data
+  String _sortOption = 'Nome';
 
   @override
   void initState() {
+    _initLocationAndData();
     super.initState();
-    _fetchRestaurants();
+  }
+
+  void _initLocationAndData() async {
+    final locData = await LocationService().getCurrentLocation();
+    if (locData != null) {
+      _currentPosition = LatLng(locData.latitude!, locData.longitude!);
+    }
+    await _fetchRestaurants();
   }
 
   Future<void> _fetchRestaurants() async {
+    _isloading = true;
     final List<Map<String, dynamic>> restaurantMaps = await _db
         .getRestaurants();
-    final List<Restaurant> fetchedRestaurants = restaurantMaps
+    List<Restaurant> fetchedRestaurants = restaurantMaps
         .map((map) => Restaurant.fromMap(map))
         .toList();
+    _sortList(fetchedRestaurants);
+
     setState(() {
       _restaurants = fetchedRestaurants;
       _isloading = false;
     });
   }
 
+  void _sortList(List<Restaurant> list) {
+    switch (_sortOption) {
+      case 'Nome':
+        list.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+        break;
+
+      case 'Recentes':
+        list.sort((a, b) => (b.updatedAt ?? 0).compareTo(a.updatedAt ?? 0));
+        break;
+
+      case 'Distância':
+        if (_currentPosition != null) {
+          final Distance distance = const Distance();
+          list.sort((a, b) {
+            final distA = distance.as(
+              LengthUnit.Meter,
+              _currentPosition!,
+              LatLng(a.latitude, a.longitude),
+            );
+            final distB = distance.as(
+              LengthUnit.Meter,
+              _currentPosition!,
+              LatLng(b.latitude, b.longitude),
+            );
+            return distA.compareTo(distB);
+          });
+        }
+        break;
+    }
+  }
+
+  void _changeSort(String newOption) {
+    setState(() {
+      _sortOption = newOption;
+      _sortList(_restaurants);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Meus Restaurantes')),
+      appBar: AppBar(
+        title: const Text('Meus Restaurantes'),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort, color: Colors.white),
+            onSelected: _changeSort,
+            itemBuilder: (BuildContext context) {
+              return {'Nome', 'Distância', 'Recentes'}.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Icon(
+                        choice == _sortOption
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: Colors.black54,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(choice),
+                    ],
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ],
+      ),
       body: _isloading
           ? const Center(child: CircularProgressIndicator())
           : _restaurants.isEmpty

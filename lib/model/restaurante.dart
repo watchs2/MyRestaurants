@@ -7,6 +7,7 @@ class Restaurant {
   final double longitude;
   final String? imgUrl;
   final int? stars;
+  final int? updatedAt;
 
   Restaurant({
     this.id,
@@ -17,6 +18,7 @@ class Restaurant {
     required this.longitude,
     this.imgUrl,
     this.stars,
+    this.updatedAt,
   });
 
   factory Restaurant.fromMap(Map<String, dynamic> map) {
@@ -29,6 +31,7 @@ class Restaurant {
       longitude: map['longitude'] as double,
       imgUrl: map['img_url'] as String?,
       stars: map['stars'] as int?,
+      updatedAt: map['updatedAt'] as int?,
     );
   }
 }
