@@ -31,11 +31,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _initLocationAndData() async {
-    final locData = await LocationService().getCurrentLocation();
-    if (locData != null) {
-      _currentPosition = LatLng(locData.latitude!, locData.longitude!);
-    }
     await _fetchRestaurants();
+    final locData = await LocationService().getCurrentLocation();
+    if (locData != null && mounted) {
+      setState(() {
+        _currentPosition = LatLng(locData.latitude!, locData.longitude!);
+        if (_sortOption == 'Distância') {
+          _sortList(_restaurants);
+        }
+      });
+    }
   }
 
   Future<void> _fetchRestaurants() async {

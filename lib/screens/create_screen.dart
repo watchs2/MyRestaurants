@@ -68,13 +68,22 @@ class _CreatePage extends State<CreatePage> {
     }
   }
 
-  void _createRestaurant() {
+  void _createRestaurant() async {
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text;
       final adress = _adressController.text;
       final phone = _phoneController.text;
 
-      _db.createRestaurant(
+      if (_latitude == null || _longitude == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Por favor, adicione uma localização.'),
+            backgroundColor: const Color.fromARGB(255, 139, 21, 12),
+          ),
+        );
+        return;
+      }
+      await _db.createRestaurant(
         name,
         adress,
         phone,
@@ -82,9 +91,12 @@ class _CreatePage extends State<CreatePage> {
         _longitude,
         _selectedImage,
       );
-
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Restaurante criado com sucesso!')),
+        SnackBar(
+          content: const Text('Restaurante criado com sucesso!'),
+          backgroundColor: const Color.fromARGB(255, 124, 177, 64),
+        ),
       );
 
       _nameController.clear();
