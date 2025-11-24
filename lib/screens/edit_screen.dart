@@ -48,23 +48,26 @@ class _EditPage extends State<EditPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Localização atualizada!')),
+          const SnackBar(
+            content: Text('Localização atualizada!'),
+            backgroundColor: const Color.fromARGB(255, 124, 177, 64),
+          ),
         );
       }
     }
   }
 
   void _editRestaurant() async {
-    print("Debug de edit");
     if (_formKey.currentState!.validate()) {
-      print("Entrei na edit");
       if (_latitude == null || _longitude == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, defina a localização GPS.')),
+          const SnackBar(
+            content: Text('Por favor, defina a localização GPS.'),
+            backgroundColor: const Color.fromARGB(255, 230, 90, 80),
+          ),
         );
         return;
       }
-      print("chamei a função db");
       final result = await _db.updateRestaurant(
         widget.restaurant.id!,
         _nameController.text,
@@ -77,9 +80,12 @@ class _EditPage extends State<EditPage> {
       );
 
       if (result > 0 && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Guardado com sucesso!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Guardado com sucesso!'),
+            backgroundColor: const Color.fromARGB(255, 124, 177, 64),
+          ),
+        );
         Navigator.of(context).pop();
       }
     }

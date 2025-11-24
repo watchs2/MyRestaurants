@@ -87,8 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
             );
             return distA.compareTo(distB);
           });
-        } else {
-          print("Erro a minha posição não aparece");
         }
         break;
     }
@@ -167,8 +165,8 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed(CreatePage.routeName).then((_) {
+        onPressed: () async {
+          await Navigator.of(context).pushNamed(CreatePage.routeName).then((_) {
             _initLocationAndData;
           });
         },

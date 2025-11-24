@@ -69,7 +69,7 @@ class _DetailsPageState extends State<DetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${_displayRestaurant.name} eliminado!'),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: const Color.fromARGB(255, 124, 177, 64),
         ),
       );
       Navigator.of(context).pushNamedAndRemoveUntil(

@@ -43,7 +43,10 @@ class _CreatePage extends State<CreatePage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Localização obtida com sucesso!')),
+          const SnackBar(
+            content: Text('Localização obtida com sucesso!'),
+            backgroundColor: const Color.fromARGB(255, 124, 177, 64),
+          ),
         );
       }
     }
@@ -58,7 +61,6 @@ class _CreatePage extends State<CreatePage> {
     }
   }
 
-  //TODO se tiver tempo fazer unselect file
   void _getPhotoGallery() async {
     final file = await _photoService.pickImage(ImageSource.gallery);
     if (file != null) {
@@ -78,7 +80,7 @@ class _CreatePage extends State<CreatePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Por favor, adicione uma localização.'),
-            backgroundColor: const Color.fromARGB(255, 139, 21, 12),
+            backgroundColor: const Color.fromARGB(255, 230, 90, 80),
           ),
         );
         return;
@@ -91,7 +93,6 @@ class _CreatePage extends State<CreatePage> {
         _longitude,
         _selectedImage,
       );
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Restaurante criado com sucesso!'),
