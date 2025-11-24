@@ -122,7 +122,6 @@ class DatabaseHandler {
     final db = await database;
     int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
     var restaurant = {
-      'id': id,
       'name': name,
       'address': address,
       'phone': phone,
@@ -133,7 +132,12 @@ class DatabaseHandler {
       'updatedAt': currentTimestamp,
     };
 
-    return await db.update('restaurant', restaurant);
+    return await db.update(
+      'restaurant',
+      restaurant,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<int> updateRestaurantRating(int id, int rating) async {

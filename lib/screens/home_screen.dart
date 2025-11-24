@@ -31,6 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _initLocationAndData() async {
+    _isloading = true;
     await _fetchRestaurants();
     final locData = await LocationService().getCurrentLocation();
     if (locData != null && mounted) {
@@ -86,12 +87,15 @@ class _MyHomePageState extends State<MyHomePage> {
             );
             return distA.compareTo(distB);
           });
+        } else {
+          print("Erro a minha posição não aparece");
         }
         break;
     }
   }
 
   void _changeSort(String newOption) {
+    _initLocationAndData;
     setState(() {
       _sortOption = newOption;
       _sortList(_restaurants);
@@ -156,13 +160,16 @@ class _MyHomePageState extends State<MyHomePage> {
               separatorBuilder: (ctx, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final restaurant = _restaurants[index];
-                return RestaurantCard(restaurant: restaurant);
+                return RestaurantCard(
+                  restaurant: restaurant,
+                  onReturn: _initLocationAndData,
+                );
               },
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).pushNamed(CreatePage.routeName).then((_) {
-            _fetchRestaurants();
+            _initLocationAndData;
           });
         },
         tooltip: 'Adicionar Restaurante',
@@ -174,7 +181,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
-  const RestaurantCard({super.key, required this.restaurant});
+  final VoidCallback onReturn;
+  const RestaurantCard({
+    super.key,
+    required this.restaurant,
+    required this.onReturn,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +202,9 @@ class RestaurantCard extends StatelessWidget {
         onTap: () {
           Navigator.of(
             context,
-          ).pushNamed(DetailsPage.routeName, arguments: restaurant);
+          ).pushNamed(DetailsPage.routeName, arguments: restaurant).then((_) {
+            onReturn();
+          });
         },
         child: Padding(
           padding: const EdgeInsets.all(16),

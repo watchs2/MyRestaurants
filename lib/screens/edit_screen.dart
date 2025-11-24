@@ -55,14 +55,16 @@ class _EditPage extends State<EditPage> {
   }
 
   void _editRestaurant() async {
+    print("Debug de edit");
     if (_formKey.currentState!.validate()) {
+      print("Entrei na edit");
       if (_latitude == null || _longitude == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Por favor, defina a localização GPS.')),
         );
         return;
       }
-
+      print("chamei a função db");
       final result = await _db.updateRestaurant(
         widget.restaurant.id!,
         _nameController.text,

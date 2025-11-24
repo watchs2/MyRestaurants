@@ -18,24 +18,36 @@ class DetailsPage extends StatefulWidget {
 }
 
 class _DetailsPageState extends State<DetailsPage> {
+  late Restaurant _displayRestaurant;
+
   late int _currentRating;
   bool _isLoading = false;
   final _db = DatabaseHandler();
 
-  // Cor principal da app (Laranja)
   final Color _primaryColor = const Color(0xFFFF5500);
 
   @override
   void initState() {
     _isLoading = true;
+    _displayRestaurant = widget.restaurant;
     _currentRating = widget.restaurant.stars ?? 0;
-    _updateAccessTime;
+    _updateAccessTime();
     super.initState();
     _isLoading = false;
   }
 
   void _updateAccessTime() async {
     await _db.updateRestaurantAccessTime(widget.restaurant.id!);
+  }
+
+  Future<void> _refreshData() async {
+    final updatedData = await _db.getRestaurantById(_displayRestaurant.id!);
+    if (updatedData != null) {
+      setState(() {
+        _displayRestaurant = Restaurant.fromMap(updatedData);
+        _currentRating = _displayRestaurant.stars ?? 0;
+      });
+    }
   }
 
   void _updateRating(int newRating) async {
@@ -51,12 +63,12 @@ class _DetailsPageState extends State<DetailsPage> {
   void _deleteRestaurant() async {
     setState(() => _isLoading = true);
     final db = DatabaseHandler();
-    await db.deleteRestaurant(widget.restaurant.id!);
+    await db.deleteRestaurant(_displayRestaurant.id!);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${widget.restaurant.name} eliminado!'),
+          content: Text('${_displayRestaurant.name} eliminado!'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -67,7 +79,6 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
-  // Widget auxiliar para secções de informação
   Widget _buildInfoTile(IconData icon, String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
@@ -172,7 +183,7 @@ class _DetailsPageState extends State<DetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final restaurant = widget.restaurant;
+    final restaurant = _displayRestaurant;
     final hasImage =
         restaurant.imgUrl != null &&
         PhotoService.getImage(restaurant.imgUrl) != null;
@@ -197,11 +208,15 @@ class _DetailsPageState extends State<DetailsPage> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.edit, color: Colors.white),
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(
-                            EditPage.routeName,
-                            arguments: restaurant,
-                          );
+                        onPressed: () async {
+                          await Navigator.of(context)
+                              .pushNamed(
+                                EditPage.routeName,
+                                arguments: _displayRestaurant,
+                              )
+                              .then((_) {
+                                _refreshData();
+                              });
                         },
                       ),
                     ),
