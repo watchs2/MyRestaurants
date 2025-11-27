@@ -256,16 +256,11 @@ class _DetailsPageState extends State<DetailsPage> {
                           ),
                   ),
                 ),
-
-                // 2. CONTEÚDO DO CORPO
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       children: [
-                        // Secção de Avaliação (Estrelas)
-
-                        // Cartão de Informações
                         Card(
                           elevation: 2,
                           shape: RoundedRectangleBorder(
@@ -353,8 +348,6 @@ class _DetailsPageState extends State<DetailsPage> {
                         _buildMap(restaurant.latitude, restaurant.longitude),
 
                         const SizedBox(height: 40),
-
-                        // Botão Eliminar
                         TextButton.icon(
                           onPressed: _deleteRestaurant,
                           icon: const Icon(Icons.delete_outline, size: 20),

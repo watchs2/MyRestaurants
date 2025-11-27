@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'MyRestaurants',
-      debugShowCheckedModeBanner: false, //para remover a faixa de debug
+      debugShowCheckedModeBanner: false, //para eliminar faixa de debug
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: primaryColor,
