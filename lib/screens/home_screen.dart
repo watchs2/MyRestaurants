@@ -93,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _changeSort(String newOption) {
-    _initLocationAndData;
+    _initLocationAndData();
     setState(() {
       _sortOption = newOption;
       _sortList(_restaurants);
@@ -167,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.of(context).pushNamed(CreatePage.routeName).then((_) {
-            _initLocationAndData;
+            _initLocationAndData();
           });
         },
         tooltip: 'Adicionar Restaurante',
