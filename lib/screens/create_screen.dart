@@ -165,10 +165,12 @@ class _CreatePage extends State<CreatePage> {
                   prefixIcon: Icon(Icons.phone),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Insira o telemóvel';
-                  if (!RegExp(r'^[0-9]+$').hasMatch(value))
-                    return 'Apenas números';
+                  }
+                  if (!RegExp(r'^\d{9}$').hasMatch(value)) {
+                    return 'Insira um número de telemóvel válido';
+                  }
                   return null;
                 },
               ),
@@ -177,9 +179,7 @@ class _CreatePage extends State<CreatePage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(
-                    0xFFFF5500,
-                  ).withOpacity(0.05), // Laranja muito suave
+                  color: const Color(0xFFFF5500).withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: const Color(0xFFFF5500).withOpacity(0.2),
@@ -212,7 +212,7 @@ class _CreatePage extends State<CreatePage> {
                       child: OutlinedButton.icon(
                         onPressed: _loadLocation,
                         icon: const Icon(Icons.gps_fixed),
-                        label: const Text('Obter Minha Localização'),
+                        label: const Text('Obter a Minha Localização'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFFFF5500),
                           side: const BorderSide(color: Color(0xFFFF5500)),

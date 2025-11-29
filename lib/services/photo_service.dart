@@ -16,7 +16,6 @@ class PhotoService {
       );
 
       if (image == null) {
-        //o user cancelou tirar foto
         return null;
       }
 

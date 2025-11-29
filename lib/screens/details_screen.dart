@@ -189,12 +189,11 @@ class _DetailsPageState extends State<DetailsPage> {
         PhotoService.getImage(restaurant.imgUrl) != null;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50, // Fundo ligeiramente cinza
+      backgroundColor: Colors.grey.shade50,
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: _primaryColor))
           : CustomScrollView(
               slivers: [
-                // 1. CABEÇALHO EXPANSÍVEL COM IMAGEM
                 SliverAppBar(
                   expandedHeight: 250.0,
                   pinned: true,
